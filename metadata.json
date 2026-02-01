@@ -1,0 +1,5 @@
+{
+  "name": "KitchenFlow",
+  "description": "A mobile-first kitchen assistant for scheduling meals, organizing pantries, and generating AI-powered recipe suggestions based on your preferences.",
+  "requestFramePermissions": []
+}
