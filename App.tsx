@@ -66,19 +66,23 @@ const REGIONS = [
 
 // --- Sub Components ---
 const Header = ({ onProfileClick, view, syncState }: { onProfileClick: () => void, view: ViewState, syncState: SyncState }) => (
-  <div className="bg-white px-6 pt-12 pb-4 flex justify-between items-center sticky top-0 z-10 shadow-sm">
+  <div className="fixed top-0 w-full z-30 px-6 pt-12 pb-4 flex justify-between items-center bg-white/70 backdrop-blur-xl border-b border-white/40">
     <div>
-      <h1 className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
+      <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-500 tracking-tight flex items-center gap-2 drop-shadow-sm">
           KitchenFlow
           {/* Sync Status Dot */}
-          {syncState === 'syncing' && <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" title="Syncing..."></span>}
-          {syncState === 'synced' && <span className="w-2 h-2 rounded-full bg-emerald-500" title="Synced"></span>}
+          {syncState === 'syncing' && <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse shadow-[0_0_8px_rgba(96,165,250,0.6)]" title="Syncing..."></span>}
+          {syncState === 'synced' && <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" title="Synced"></span>}
       </h1>
-      <p className="text-xs text-slate-500 font-medium">Your Daily Culinary Assistant</p>
+      <p className="text-xs text-slate-500 font-medium tracking-wide">Your Smart Culinary Assistant</p>
     </div>
     <button 
       onClick={onProfileClick}
-      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-2 shadow-sm transition-colors ${view === 'settings' ? 'bg-slate-800 text-white border-slate-800' : 'bg-emerald-100 text-emerald-700 border-white'}`}
+      className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border transition-all duration-300 shadow-md ${
+          view === 'settings' 
+            ? 'bg-slate-900 text-white border-slate-900 scale-105' 
+            : 'bg-white text-slate-700 border-slate-100 hover:border-slate-300 hover:shadow-lg'
+      }`}
     >
       {view === 'settings' ? (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -90,18 +94,21 @@ const Header = ({ onProfileClick, view, syncState }: { onProfileClick: () => voi
 );
 
 const EmptyState = ({ message, onAction, actionText, icon }: { message: string, onAction: () => void, actionText: string, icon?: React.ReactNode }) => (
-  <div className="flex flex-col items-center justify-center py-12 px-4 text-center h-full">
-    <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-300">
+  <div className="flex flex-col items-center justify-center py-16 px-8 text-center h-full animate-fade-in">
+    <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 text-slate-300 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
       {icon || (
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       )}
     </div>
-    <h3 className="text-lg font-medium text-slate-900 mb-2">Nothing here yet</h3>
-    <p className="text-slate-500 text-sm mb-6 max-w-xs">{message}</p>
-    <button onClick={onAction} className="text-emerald-600 font-semibold hover:text-emerald-700">
-      {actionText} &rarr;
+    <h3 className="text-xl font-semibold text-slate-800 mb-3">Nothing here yet</h3>
+    <p className="text-slate-500 text-sm mb-8 max-w-[240px] leading-relaxed">{message}</p>
+    <button 
+        onClick={onAction} 
+        className="px-6 py-3 rounded-full bg-white border border-slate-200 text-slate-900 font-semibold shadow-sm hover:shadow-md transition-all active:scale-95"
+    >
+      {actionText}
     </button>
   </div>
 );
@@ -277,13 +284,8 @@ export default function App() {
 
   const handleSignIn = () => {
       signIn();
-      // Polling or listener would be better, but for now we rely on the GAPI callback reloading the page or we re-check manually.
-      // In this specific simple flow, the popup handles it.
-      // We'll set a visual cue
       setSyncState('syncing');
       setTimeout(() => {
-          // Re-check auth status after a delay for user interaction
-          // Ideally pass a callback to signIn
            initGoogleClient((signedIn) => {
                setIsSignedIn(signedIn);
                if(signedIn) setSyncState('synced');
@@ -420,36 +422,63 @@ export default function App() {
     const expiringCount = getExpiringItems().length;
 
     return (
-      <div className="space-y-6 pb-24">
+      <div className="pb-32 px-4 pt-32 max-w-lg mx-auto space-y-8">
         {/* Hero Section */}
-        <div className="bg-emerald-600 text-white p-6 rounded-3xl shadow-lg shadow-emerald-200 mx-4 mt-2 relative overflow-hidden">
-          <div className="relative z-10">
-            <h2 className="text-3xl font-bold mb-1">Today's Menu</h2>
-            <p className="text-emerald-100 opacity-90">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-          </div>
-          <div className="absolute -right-6 -bottom-10 w-32 h-32 bg-emerald-500 rounded-full opacity-50 blur-2xl"></div>
+        <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl shadow-rose-200/50 group transition-transform active:scale-[0.99] mt-2">
+             {/* Gradient Background - Soft feminine gradient */}
+             <div className="absolute inset-0 bg-gradient-to-bl from-rose-300 via-rose-400 to-orange-300 opacity-90"></div>
+             
+             {/* Abstract Glass Shapes */}
+             <div className="absolute top-[-20%] right-[-10%] w-48 h-48 bg-white/20 rounded-full blur-2xl"></div>
+             <div className="absolute bottom-[-10%] left-[-10%] w-32 h-32 bg-yellow-200/30 rounded-full blur-xl"></div>
+             
+             <div className="relative z-10 p-8 text-white">
+                 <div className="flex justify-between items-start">
+                    <div>
+                        <h2 className="text-4xl font-bold mb-1 tracking-tight drop-shadow-sm">Good Day</h2>
+                        <p className="text-white/90 font-medium text-lg tracking-wide">{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                    </div>
+                    {/* Decorative Icon */}
+                    <div className="bg-white/20 p-3 rounded-full backdrop-blur-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 text-white">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+                        </svg>
+                    </div>
+                 </div>
+                 
+                 <div className="mt-8 flex gap-3">
+                    <button onClick={() => setView('generator')} className="bg-white/20 backdrop-blur-xl border border-white/40 px-6 py-3 rounded-2xl text-sm font-semibold hover:bg-white/30 transition-all active:scale-95 shadow-lg shadow-rose-900/10">
+                        Discover
+                    </button>
+                    <button onClick={() => setView('planner')} className="bg-white text-rose-500 px-6 py-3 rounded-2xl text-sm font-bold shadow-lg shadow-rose-900/10 hover:bg-rose-50 transition-all active:scale-95">
+                        My Plan
+                    </button>
+                 </div>
+             </div>
         </div>
         
         {/* Auto Recommendation Section */}
-        <div className="animate-fade-in pl-4">
-           <div className="flex items-center gap-2 mb-3 pr-4">
-             <div className="bg-amber-100 p-1.5 rounded-full text-amber-600">
-               <ChefIcon active={true} />
+        <div className="animate-fade-in">
+           <div className="flex items-center justify-between mb-4 px-1">
+             <div className="flex items-center gap-2">
+                 <div className="bg-indigo-100 p-2 rounded-xl text-indigo-500">
+                    <ChefIcon active={true} />
+                 </div>
+                 <h3 className="font-bold text-slate-800 text-xl">Chef's Picks</h3>
              </div>
-             <h3 className="font-bold text-slate-800">Chef's Recommendations</h3>
            </div>
            
            {recLoading ? (
-             <div className="h-40 mr-4 bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center justify-center animate-pulse">
-                <div className="flex flex-col items-center gap-2">
-                   <div className="w-8 h-8 rounded-full border-2 border-slate-200 border-t-emerald-500 animate-spin"></div>
-                   <span className="text-xs text-slate-400 font-medium">Curating your menu...</span>
+             <div className="h-64 bg-white/60 backdrop-blur-md rounded-[2rem] border border-white/40 shadow-sm flex items-center justify-center animate-pulse">
+                <div className="flex flex-col items-center gap-3">
+                   <div className="w-10 h-10 rounded-full border-4 border-slate-100 border-t-rose-400 animate-spin"></div>
+                   <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Curating...</span>
                 </div>
              </div>
            ) : dailyRecs.length > 0 ? (
-             <div className="flex overflow-x-auto gap-4 pb-4 pr-4 no-scrollbar snap-x snap-mandatory">
+             <div className="flex overflow-x-auto gap-5 pb-6 -mx-4 px-4 no-scrollbar snap-x snap-mandatory">
                  {dailyRecs.map((rec) => (
-                    <div key={rec.id} className="min-w-[85%] sm:min-w-[300px] snap-center">
+                    <div key={rec.id} className="min-w-[85%] sm:min-w-[320px] snap-center h-full">
                         <RecipeCard 
                           recipe={rec}
                           onSelect={setSelectedRecipe}
@@ -461,68 +490,88 @@ export default function App() {
                  ))}
              </div>
            ) : (
-             <div className="bg-white rounded-2xl border border-slate-100 p-6 text-center shadow-sm mr-4">
-                <p className="text-sm text-slate-500">Check back later for your daily recommendation!</p>
+             <div className="glass-card rounded-[2rem] p-8 text-center shadow-sm">
+                <p className="text-sm text-slate-400 font-medium">Check back later for your daily recommendation!</p>
              </div>
            )}
         </div>
 
         {/* Expiring Alert */}
         {expiringCount > 0 && (
-            <div className="mx-4 bg-orange-50 border border-orange-200 rounded-2xl p-4 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-3">
-                    <div className="bg-orange-100 p-2 rounded-full text-orange-600">
-                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                            <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 backdrop-blur-xl border border-amber-100 rounded-[2rem] p-6 flex items-center justify-between shadow-[0_8px_30px_rgb(251,191,36,0.15)] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-orange-200/20 rounded-full -mr-5 -mt-5 blur-xl"></div>
+                
+                <div className="flex items-center gap-4 relative z-10">
+                    <div className="bg-white p-3 rounded-full text-orange-500 shadow-sm ring-4 ring-orange-100">
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                            <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clipRule="evenodd" />
                         </svg>
                     </div>
                     <div>
-                        <p className="text-sm font-bold text-orange-900">{expiringCount} items expiring soon</p>
-                        <p className="text-xs text-orange-700">Check your pantry</p>
+                        <p className="font-bold text-slate-800 text-lg">{expiringCount} Items</p>
+                        <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Expiring Soon</p>
                     </div>
                 </div>
                 <button 
                   onClick={() => setView('pantry')}
-                  className="bg-white text-orange-600 px-3 py-1.5 rounded-lg text-xs font-bold border border-orange-100 shadow-sm"
+                  className="relative z-10 bg-white text-orange-600 px-5 py-2.5 rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition-all active:scale-95"
                 >
-                  View
+                  Check Pantry
                 </button>
             </div>
         )}
 
-        {/* Today's Meals */}
-        <div className="px-4 space-y-4">
-          <h3 className="font-bold text-slate-800">Planned Meals</h3>
-          {[MealType.Breakfast, MealType.Lunch, MealType.Dinner].map((type) => {
-            const meal = todaysPlan?.meals?.[type];
-            return (
-              <div key={type} className="flex gap-4 items-start">
-                <div className="w-16 pt-2 text-right text-slate-400 text-xs font-bold uppercase tracking-wider">{type}</div>
-                <div className="flex-1">
-                  {meal ? (
-                    <div onClick={() => setSelectedRecipe(meal)} className="cursor-pointer hover:opacity-90 transition-opacity">
-                      <RecipeCard 
-                        recipe={meal} 
-                        compact 
-                        isFavorite={isRecipeFavorite(meal.id)}
-                        onToggleFavorite={toggleFavorite}
-                      />
+        {/* Today's Meals - Redesigned Layout */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+             <div className="bg-emerald-100 p-2 rounded-xl text-emerald-600">
+               <CalendarIcon active={true} />
+             </div>
+             <h3 className="font-bold text-slate-800 text-xl">On The Menu</h3>
+          </div>
+          
+          <div className="space-y-5">
+            {[MealType.Breakfast, MealType.Lunch, MealType.Dinner].map((type) => {
+                const meal = todaysPlan?.meals?.[type];
+                return (
+                <div key={type} className="flex flex-col gap-2">
+                     <div className="flex items-center gap-2 ml-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{type}</span>
+                     </div>
+                    
+                    {/* Meal Content */}
+                    <div className="flex-1">
+                    {meal ? (
+                        <div onClick={() => setSelectedRecipe(meal)} className="cursor-pointer hover:scale-[1.01] transition-transform duration-300 h-full">
+                            <RecipeCard 
+                                recipe={meal} 
+                                compact 
+                                isFavorite={isRecipeFavorite(meal.id)}
+                                onToggleFavorite={toggleFavorite}
+                            />
+                        </div>
+                    ) : (
+                        <button 
+                        onClick={() => {
+                            setPlanTarget({ date: today, meal: type });
+                            setView('generator');
+                        }}
+                        className="w-full h-[90px] bg-white/40 border-2 border-dashed border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/50 rounded-[1.5rem] flex items-center justify-center text-slate-400 hover:text-emerald-600 transition-all gap-3 group hover:shadow-lg hover:shadow-emerald-100/50"
+                        >
+                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm text-inherit transition-colors group-hover:bg-emerald-100">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                </svg>
+                            </div>
+                            <span className="text-xs font-bold uppercase tracking-widest">Plan Meal</span>
+                        </button>
+                    )}
                     </div>
-                  ) : (
-                    <button 
-                      onClick={() => {
-                        setPlanTarget({ date: today, meal: type });
-                        setView('generator');
-                      }}
-                      className="w-full h-24 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50 transition-all gap-2"
-                    >
-                      <span className="text-sm font-medium">+ Plan {type}</span>
-                    </button>
-                  )}
                 </div>
-              </div>
-            );
-          })}
+                );
+            })}
+          </div>
         </div>
       </div>
     );
@@ -543,20 +592,20 @@ export default function App() {
     const expiringCount = getExpiringItems().length;
 
     return (
-        <div className="pb-24 px-4 pt-2">
-            <h2 className="text-xl font-bold text-slate-800 mb-2 px-2">My Pantry</h2>
-            <p className="text-slate-500 text-sm mb-6 px-2">Track ingredients and expiration dates.</p>
+        <div className="pb-32 px-4 pt-32 max-w-lg mx-auto">
+            <h2 className="text-2xl font-bold text-slate-800 mb-2 px-1">My Pantry</h2>
+            <p className="text-slate-500 text-sm mb-6 px-1">Keep track of your ingredients.</p>
 
             {/* Search Bar */}
             <div className="relative mb-6">
                 <input 
                     type="text"
-                    className="w-full bg-white border border-slate-200 rounded-xl p-3 pl-10 text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm"
+                    className="w-full bg-white/80 backdrop-blur-sm border-0 rounded-full py-4 pl-12 pr-4 text-slate-800 text-sm focus:ring-2 focus:ring-emerald-200 placeholder-slate-400 shadow-[0_8px_30px_rgb(0,0,0,0.04)] outline-none"
                     placeholder="Search pantry items..."
                     value={pantrySearchQuery}
                     onChange={(e) => setPantrySearchQuery(e.target.value)}
                 />
-                 <div className="absolute left-3 top-3 text-slate-400">
+                 <div className="absolute left-4 top-3.5 text-slate-400">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
                         <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
                     </svg>
@@ -567,41 +616,43 @@ export default function App() {
             {expiringCount > 0 && !pantrySearchQuery && (
                  <button 
                     onClick={handleCookExpiring}
-                    className="w-full mb-6 bg-gradient-to-r from-orange-400 to-red-500 text-white p-4 rounded-2xl shadow-lg shadow-orange-100 flex items-center justify-between"
+                    className="w-full mb-8 bg-gradient-to-r from-orange-400 to-rose-500 text-white p-5 rounded-3xl shadow-xl shadow-rose-200 flex items-center justify-between active:scale-[0.98] transition-transform"
                  >
-                    <div className="flex items-center gap-3">
-                         <div className="bg-white/20 p-2 rounded-full">
+                    <div className="flex items-center gap-4">
+                         <div className="bg-white/20 p-2.5 rounded-full backdrop-blur-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
                                 <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
                             </svg>
                          </div>
                          <div className="text-left">
-                            <span className="block font-bold">Reduce Waste</span>
-                            <span className="text-xs opacity-90">Find recipes for {expiringCount} expiring items</span>
+                            <span className="block font-bold text-lg">Reduce Waste</span>
+                            <span className="text-xs text-white/90 font-medium">Find recipes for {expiringCount} expiring items</span>
                          </div>
                     </div>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
-                         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                    </svg>
+                    <div className="bg-white/10 p-2 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </div>
                  </button>
             )}
 
             {/* Add Item Form */}
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6">
-                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Add Item</h3>
+            <div className="glass-card p-5 rounded-3xl mb-8">
+                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 ml-1">Add New Item</h3>
                  <div className="flex flex-col gap-3">
                      <div className="flex gap-2">
                         <input 
                             type="text" 
-                            placeholder="Item Name (e.g. Milk)" 
-                            className="flex-[2] bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                            placeholder="Item Name" 
+                            className="flex-[2] bg-slate-50 border-0 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-emerald-200 outline-none"
                             value={newItemName}
                             onChange={(e) => setNewItemName(e.target.value)}
                         />
                         <input 
                             type="text" 
                             placeholder="Qty" 
-                            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                            className="flex-1 bg-slate-50 border-0 rounded-2xl p-4 text-sm focus:ring-2 focus:ring-emerald-200 outline-none"
                             value={newItemQty}
                             onChange={(e) => setNewItemQty(e.target.value)}
                         />
@@ -609,13 +660,13 @@ export default function App() {
                      <div className="flex gap-2">
                          <input 
                             type="date" 
-                            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-600 focus:ring-2 focus:ring-emerald-500 outline-none"
+                            className="flex-1 bg-slate-50 border-0 rounded-2xl p-4 text-sm text-slate-600 focus:ring-2 focus:ring-emerald-200 outline-none"
                             value={newItemDate}
                             onChange={(e) => setNewItemDate(e.target.value)}
                          />
                          <button 
                             onClick={handleAddToPantry}
-                            className="bg-emerald-600 text-white font-bold px-6 rounded-xl hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-200"
+                            className="bg-slate-900 text-white font-bold px-8 rounded-2xl hover:bg-slate-800 transition-colors shadow-lg shadow-slate-300"
                          >
                              Add
                          </button>
@@ -626,7 +677,7 @@ export default function App() {
             {/* Pantry List */}
             {sortedPantry.length === 0 ? (
                  <EmptyState 
-                    message={pantrySearchQuery ? "No items found matching your search." : "Your pantry is empty. Add items to track freshness."}
+                    message={pantrySearchQuery ? "No items found matching your search." : "Your pantry is empty."}
                     actionText={pantrySearchQuery ? "Clear Search" : ""}
                     onAction={() => setPantrySearchQuery("")}
                     icon={<PantryIcon active={false}/>}
@@ -645,17 +696,19 @@ export default function App() {
   const renderPlanner = () => {
     const dates = getFutureDates(7);
     return (
-      <div className="space-y-4 pb-24 px-4 pt-2">
-         <h2 className="text-xl font-bold text-slate-800 mb-4 px-2">Weekly Plan</h2>
-         {dates.map(date => (
-            <div key={date} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
-                <div className="flex justify-between items-center mb-3">
-                    <h3 className={`font-bold ${date === getTodayDate() ? 'text-emerald-600' : 'text-slate-700'}`}>
+      <div className="space-y-6 pb-32 px-4 pt-32 max-w-lg mx-auto">
+         <h2 className="text-2xl font-bold text-slate-800 mb-4 px-1">Weekly Plan</h2>
+         {dates.map(date => {
+            const isToday = date === getTodayDate();
+            return (
+            <div key={date} className={`rounded-3xl border p-5 transition-all ${isToday ? 'bg-white shadow-xl shadow-emerald-100 border-emerald-100 ring-1 ring-emerald-50' : 'bg-white/60 border-white/50 hover:bg-white'}`}>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className={`font-bold text-lg ${isToday ? 'text-emerald-600' : 'text-slate-700'}`}>
                         {getDayName(date)}
                     </h3>
-                    {date === getTodayDate() && <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">TODAY</span>}
+                    {isToday && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-bold shadow-sm">TODAY</span>}
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-3">
                     {[MealType.Breakfast, MealType.Lunch, MealType.Dinner].map(type => {
                         const meal = schedule[date]?.meals?.[type];
                         return (
@@ -668,47 +721,52 @@ export default function App() {
                                         setView('generator');
                                     }
                                 }}
-                                className={`h-20 rounded-xl flex flex-col items-center justify-center p-1 text-center border transition-colors cursor-pointer ${meal ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100 hover:bg-slate-100'}`}
+                                className={`aspect-square rounded-2xl flex flex-col items-center justify-center p-2 text-center transition-all cursor-pointer relative overflow-hidden ${meal ? 'bg-emerald-50' : 'bg-slate-50 hover:bg-slate-100'}`}
                             >
-                                <span className="text-[10px] text-slate-400 mb-1">{type.charAt(0)}</span>
                                 {meal ? (
-                                    <span className="text-xs font-medium text-emerald-800 line-clamp-2 leading-tight">{meal.title}</span>
+                                    <>
+                                        <img src={`https://picsum.photos/seed/${meal.title.replace(/\s/g, '')}/100/100`} className="absolute inset-0 w-full h-full object-cover opacity-30" alt="" />
+                                        <span className="relative z-10 text-[10px] text-emerald-800 font-bold leading-tight line-clamp-2 px-1">{meal.title}</span>
+                                    </>
                                 ) : (
-                                    <span className="text-xl text-slate-300">+</span>
+                                    <>
+                                        <span className="text-[10px] text-slate-400 font-bold mb-1 uppercase tracking-wider">{type.charAt(0)}</span>
+                                        <span className="text-2xl text-slate-300 font-light">+</span>
+                                    </>
                                 )}
                             </div>
                         )
                     })}
                 </div>
             </div>
-         ))}
+         )})}
       </div>
     );
   };
 
   const renderGenerator = () => {
     return (
-      <div className="pb-24 px-4 pt-2 flex flex-col h-full">
+      <div className="pb-32 px-4 pt-32 flex flex-col h-full max-w-lg mx-auto">
         {/* Input Area */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-6">
-            <h2 className="text-xl font-bold text-slate-800 mb-2">Recipe Search</h2>
-            <p className="text-slate-500 text-sm mb-4">
+        <div className="glass-card p-6 rounded-[2rem] mb-8">
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Discover Recipes</h2>
+            <p className="text-slate-500 text-sm mb-6">
               {planTarget ? `Finding a ${planTarget.meal} for ${getDayName(planTarget.date)}.` : "Search specifically or find recipes based on your ingredients."}
             </p>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
                 {/* Text Search */}
                 <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Search by Name or Craving</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Craving</label>
                     <div className="relative">
                         <input 
                             type="text"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 pl-10 text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                            placeholder="e.g. Pasta Carbonara, Spicy Thai..."
+                            className="w-full bg-slate-50 border-0 rounded-2xl p-4 pl-12 text-slate-800 text-sm focus:ring-2 focus:ring-emerald-200 outline-none"
+                            placeholder="e.g. Pasta Carbonara..."
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
                         />
-                        <div className="absolute left-3 top-3 text-slate-400">
+                        <div className="absolute left-4 top-4 text-slate-400">
                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
                                 <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
                             </svg>
@@ -718,18 +776,17 @@ export default function App() {
 
                 <div className="relative flex py-1 items-center">
                     <div className="flex-grow border-t border-slate-200"></div>
-                    <span className="flex-shrink-0 mx-4 text-slate-300 text-xs font-bold">AND / OR</span>
+                    <span className="flex-shrink-0 mx-4 text-slate-300 text-[10px] font-bold tracking-widest uppercase">OR WITH INGREDIENTS</span>
                     <div className="flex-grow border-t border-slate-200"></div>
                 </div>
 
                 {/* Ingredient Input */}
                 <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Your Ingredients</label>
-                    <div className="flex gap-2 mb-2">
+                    <div className="flex gap-2 mb-3">
                         <input 
                             type="text"
-                            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                            placeholder="e.g. Chicken, Rice, Tomatoes"
+                            className="flex-1 bg-slate-50 border-0 rounded-2xl p-4 text-slate-800 text-sm focus:ring-2 focus:ring-emerald-200 outline-none"
+                            placeholder="Add ingredient..."
                             value={ingredientInput}
                             onChange={(e) => setIngredientInput(e.target.value)}
                             onKeyDown={(e) => {
@@ -741,32 +798,32 @@ export default function App() {
                         />
                         <button 
                             onClick={handleAddIngredient}
-                            className="bg-emerald-100 text-emerald-700 font-bold px-4 rounded-xl hover:bg-emerald-200 transition-colors"
+                            className="bg-emerald-100 text-emerald-700 font-bold px-5 rounded-2xl hover:bg-emerald-200 transition-colors"
                         >
-                            +
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                                <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+                            </svg>
                         </button>
                     </div>
                     {/* Tags */}
-                    {ingredients.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-2">
-                            {ingredients.map((ing, idx) => (
-                                <span key={idx} className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-3 py-1 rounded-full text-xs font-medium border border-slate-200">
-                                    {ing}
-                                    <button onClick={() => handleRemoveIngredient(idx)} className="text-slate-400 hover:text-red-500">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                                            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-                                        </svg>
-                                    </button>
-                                </span>
-                            ))}
-                        </div>
-                    )}
+                    <div className="flex flex-wrap gap-2 mb-2 min-h-[2rem]">
+                        {ingredients.map((ing, idx) => (
+                            <span key={idx} className="inline-flex items-center gap-1 bg-white border border-slate-100 text-slate-700 px-3 py-1.5 rounded-full text-xs font-medium shadow-sm animate-fade-in">
+                                {ing}
+                                <button onClick={() => handleRemoveIngredient(idx)} className="text-slate-400 hover:text-rose-500 ml-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                                        <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                                    </svg>
+                                </button>
+                            </span>
+                        ))}
+                    </div>
                 </div>
 
                 <button 
                     onClick={handleGenerate}
                     disabled={loading || (!prompt && ingredients.length === 0)}
-                    className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 mt-2"
+                    className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 mt-4 text-lg active:scale-[0.98]"
                 >
                     {loading ? (
                         <>
@@ -774,40 +831,19 @@ export default function App() {
                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            Searching...
+                            Creating Magic...
                         </>
                     ) : (
-                        "Find Recipes"
+                        "Generate Recipes"
                     )}
                 </button>
-                
-                {/* Active Preferences Hint */}
-                {(preferences.dietaryRestrictions || preferences.excludeIngredients || preferences.region) && (
-                   <div className="flex flex-wrap justify-center gap-1 mt-2">
-                     {preferences.region && (
-                        <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full border border-blue-100">
-                          Region: {preferences.region}
-                        </span>
-                     )}
-                     {preferences.dietaryRestrictions && (
-                        <span className="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded-full border border-green-100">
-                          Diet: {preferences.dietaryRestrictions}
-                        </span>
-                     )}
-                     {preferences.excludeIngredients && (
-                        <span className="text-[10px] bg-red-50 text-red-600 px-2 py-0.5 rounded-full border border-red-100">
-                          No {preferences.excludeIngredients}
-                        </span>
-                     )}
-                   </div>
-                )}
             </div>
         </div>
 
         {/* Results */}
         {generatedRecipes.length > 0 && (
-            <div className="space-y-4 animate-fade-in">
-                <h3 className="text-lg font-bold text-slate-800 px-2">Results</h3>
+            <div className="space-y-6 animate-fade-in">
+                <h3 className="text-xl font-bold text-slate-800 px-2">Found for you</h3>
                 <div className="grid grid-cols-1 gap-6">
                     {generatedRecipes.map(recipe => (
                         <div key={recipe.id} className="h-auto">
@@ -835,19 +871,20 @@ export default function App() {
       });
 
       return (
-          <div className="pb-24 px-4 pt-2">
-              <h2 className="text-xl font-bold text-slate-800 mb-4 px-2">Saved Recipes</h2>
+          <div className="pb-32 px-4 pt-32 max-w-lg mx-auto">
+              <h2 className="text-2xl font-bold text-slate-800 mb-2 px-1">Saved Recipes</h2>
+              <p className="text-slate-500 text-sm mb-6 px-1">Your personal collection.</p>
               
               {/* Search Bar */}
-              <div className="relative mb-6">
+              <div className="relative mb-8">
                   <input 
                       type="text"
-                      className="w-full bg-white border border-slate-200 rounded-xl p-3 pl-10 text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm"
-                      placeholder="Search saved recipes or ingredients..."
+                      className="w-full bg-white/80 backdrop-blur-sm border-0 rounded-full py-4 pl-12 pr-4 text-slate-800 text-sm focus:ring-2 focus:ring-emerald-200 outline-none shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+                      placeholder="Search saved recipes..."
                       value={favoritesSearchQuery}
                       onChange={(e) => setFavoritesSearchQuery(e.target.value)}
                   />
-                  <div className="absolute left-3 top-3 text-slate-400">
+                  <div className="absolute left-4 top-3.5 text-slate-400">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
                           <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
                       </svg>
@@ -856,7 +893,7 @@ export default function App() {
 
               {filteredFavorites.length === 0 ? (
                   <EmptyState 
-                    message={favoritesSearchQuery ? "No recipes found matching your search." : "You haven't saved any recipes yet. Generate some ideas or browse to add favorites."}
+                    message={favoritesSearchQuery ? "No recipes found matching your search." : "Build your collection by saving recipes you love."}
                     actionText={favoritesSearchQuery ? "Clear Search" : "Discover Recipes"}
                     onAction={() => favoritesSearchQuery ? setFavoritesSearchQuery("") : setView('generator')}
                     icon={(
@@ -886,61 +923,56 @@ export default function App() {
 
   const renderProfile = () => {
     return (
-      <div className="pb-24 px-4 pt-2">
-        <h2 className="text-xl font-bold text-slate-800 mb-6 px-2">User Profile</h2>
+      <div className="pb-32 px-4 pt-32 max-w-lg mx-auto">
+        <h2 className="text-2xl font-bold text-slate-800 mb-6 px-1">Settings & Profile</h2>
         
         {/* Google Cloud Sync Section */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4 mb-6 relative overflow-hidden">
-           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-500"></div>
-           <div className="flex justify-between items-start">
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 rounded-[2rem] shadow-xl shadow-blue-200 mb-8 text-white relative overflow-hidden">
+           {/* Decor */}
+           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl"></div>
+
+           <div className="relative z-10 flex justify-between items-start">
                <div>
-                   <h3 className="text-lg font-bold text-slate-800">Cloud Backup</h3>
-                   <p className="text-xs text-slate-500 max-w-[200px]">Sync your data to Google Sheets to keep it safe and accessible.</p>
+                   <h3 className="text-lg font-bold">Cloud Sync</h3>
+                   <p className="text-sm text-white/80 max-w-[200px] mb-4 font-light">Keep your recipes safe and synced across devices.</p>
+                   
+                    {isSignedIn && (
+                        <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-medium border border-white/20">
+                            <span className={`w-2 h-2 rounded-full ${syncState === 'synced' ? 'bg-emerald-400' : 'bg-amber-400 animate-pulse'}`}></span>
+                            {syncState === 'synced' ? 'Synced' : syncState === 'syncing' ? 'Syncing...' : 'Pending'}
+                        </div>
+                    )}
                </div>
+               
                {isSignedIn ? (
-                    <div className="flex flex-col items-end gap-1">
-                        <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
-                                <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-                            </svg>
-                            Connected
-                        </span>
-                        <button onClick={handleSignOut} className="text-xs text-slate-400 underline hover:text-red-500">Sign Out</button>
-                    </div>
+                   <button onClick={handleSignOut} className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors">
+                       Sign Out
+                   </button>
                ) : (
                     <button 
                         onClick={handleSignIn}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-md hover:bg-blue-700 transition-colors"
+                        className="bg-white text-blue-600 px-6 py-2.5 rounded-full text-sm font-bold shadow-lg hover:bg-blue-50 transition-colors"
                     >
-                        Sign In
+                        Connect Google
                     </button>
                )}
            </div>
-           
-           {isSignedIn && (
-               <div className="bg-slate-50 rounded-xl p-3 flex items-center justify-between text-xs">
-                   <span className="text-slate-500 font-medium">Status</span>
-                   <span className={`font-bold ${syncState === 'synced' ? 'text-emerald-600' : syncState === 'syncing' ? 'text-blue-600' : 'text-slate-400'}`}>
-                       {syncState === 'synced' ? 'All data saved' : syncState === 'syncing' ? 'Syncing...' : 'Waiting...'}
-                   </span>
-               </div>
-           )}
         </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+        <div className="glass-card p-6 rounded-[2rem] space-y-8">
           
           {/* Region */}
           <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Regional Preference</label>
-            <div className="flex gap-2 mb-2 overflow-x-auto pb-2 no-scrollbar">
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Cuisine Preference</label>
+            <div className="flex gap-2 mb-3 overflow-x-auto pb-2 no-scrollbar">
                 {REGIONS.map(region => (
                     <button
                         key={region}
                         onClick={() => setPreferences(p => ({...p, region}))}
-                        className={`whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                        className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition-all ${
                             preferences.region === region 
-                            ? 'bg-blue-100 text-blue-700 border-blue-200 ring-1 ring-blue-400' 
-                            : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                            ? 'bg-slate-900 text-white shadow-lg shadow-slate-300 transform scale-105' 
+                            : 'bg-white border border-slate-100 text-slate-500 hover:bg-slate-50'
                         }`}
                     >
                         {region}
@@ -951,50 +983,48 @@ export default function App() {
               type="text"
               value={preferences.region}
               onChange={(e) => setPreferences(p => ({...p, region: e.target.value}))}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-              placeholder="Or type custom (e.g. South Indian, Mediterranean...)"
+              className="w-full bg-slate-50 border-0 rounded-2xl p-4 text-slate-800 text-sm focus:ring-2 focus:ring-emerald-200 outline-none"
+              placeholder="Or type custom (e.g. Fusion, Nordic...)"
             />
-            <p className="text-[10px] text-slate-400 mt-1 ml-1">We will suggest more recipes from this region.</p>
           </div>
 
-          {/* Diet */}
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Dietary Preferences</label>
-            <input 
-              type="text"
-              value={preferences.dietaryRestrictions}
-              onChange={(e) => setPreferences(p => ({...p, dietaryRestrictions: e.target.value}))}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-              placeholder="e.g. Vegetarian, Keto, Gluten-free"
-            />
-            <p className="text-[10px] text-slate-400 mt-1 ml-1">Results will prioritize these diets.</p>
-          </div>
+          {/* Diet & Allergies */}
+          <div className="grid grid-cols-1 gap-6">
+            <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Dietary Mode</label>
+                <input 
+                type="text"
+                value={preferences.dietaryRestrictions}
+                onChange={(e) => setPreferences(p => ({...p, dietaryRestrictions: e.target.value}))}
+                className="w-full bg-slate-50 border-0 rounded-2xl p-4 text-slate-800 text-sm focus:ring-2 focus:ring-emerald-200 outline-none"
+                placeholder="e.g. Vegetarian, Keto..."
+                />
+            </div>
 
-          {/* Allergies */}
-          <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Allergies & Exclusions</label>
-             <input 
-              type="text"
-              value={preferences.excludeIngredients}
-              onChange={(e) => setPreferences(p => ({...p, excludeIngredients: e.target.value}))}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-800 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-              placeholder="e.g. Peanuts, Shellfish, Mushrooms"
-            />
-             <p className="text-[10px] text-slate-400 mt-1 ml-1">Results will strictly avoid these ingredients.</p>
+            <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Excluded Ingredients</label>
+                <input 
+                type="text"
+                value={preferences.excludeIngredients}
+                onChange={(e) => setPreferences(p => ({...p, excludeIngredients: e.target.value}))}
+                className="w-full bg-slate-50 border-0 rounded-2xl p-4 text-slate-800 text-sm focus:ring-2 focus:ring-emerald-200 outline-none"
+                placeholder="e.g. Peanuts, Shellfish..."
+                />
+            </div>
           </div>
 
           {/* Skill Level */}
           <div>
-             <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Cooking Skill Level</label>
-             <div className="grid grid-cols-3 gap-2">
+             <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Skill Level</label>
+             <div className="grid grid-cols-3 gap-3">
                {(['Beginner', 'Intermediate', 'Advanced'] as CookingSkill[]).map((level) => (
                  <button
                   key={level}
                   onClick={() => setPreferences(p => ({...p, cookingSkill: level}))}
-                  className={`py-2 rounded-xl text-xs font-bold border transition-all ${
+                  className={`py-3 rounded-2xl text-xs font-bold transition-all ${
                     preferences.cookingSkill === level 
-                      ? 'bg-emerald-100 text-emerald-700 border-emerald-200 ring-1 ring-emerald-500' 
-                      : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                      ? 'bg-emerald-100 text-emerald-700 ring-2 ring-emerald-200' 
+                      : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
                   }`}
                  >
                    {level}
@@ -1005,18 +1035,18 @@ export default function App() {
           
           {/* Servings */}
           <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Default Servings</label>
-            <div className="flex items-center gap-4">
+            <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Default Servings</label>
+            <div className="flex items-center gap-6 bg-slate-50 rounded-2xl p-2 w-fit">
               <button 
                 onClick={() => setPreferences(p => ({...p, servings: Math.max(1, p.servings - 1)}))}
-                className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-bold hover:bg-slate-200 transition-colors"
+                className="w-10 h-10 rounded-xl bg-white text-slate-600 flex items-center justify-center font-bold shadow-sm hover:shadow-md transition-all"
               >
                 -
               </button>
               <span className="text-xl font-bold text-slate-800 w-8 text-center">{preferences.servings}</span>
               <button 
                 onClick={() => setPreferences(p => ({...p, servings: p.servings + 1}))}
-                className="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-bold hover:bg-slate-200 transition-colors"
+                className="w-10 h-10 rounded-xl bg-white text-slate-600 flex items-center justify-center font-bold shadow-sm hover:shadow-md transition-all"
               >
                 +
               </button>
@@ -1024,26 +1054,16 @@ export default function App() {
           </div>
 
         </div>
-        
-        <div className="mt-6 bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex gap-3 items-start">
-           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-emerald-600 mt-0.5">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
-            </svg>
-           <div>
-             <h4 className="text-sm font-bold text-emerald-800">Preferences Saved</h4>
-             <p className="text-xs text-emerald-600">Your profile settings are automatically saved and will apply to all new recipe searches.</p>
-           </div>
-        </div>
       </div>
     )
   }
 
   return (
-    <div className="h-full w-full flex flex-col bg-slate-50">
+    <div className="h-full w-full flex flex-col relative">
       <Header onProfileClick={() => setView('settings')} view={view} syncState={syncState} />
 
       <main className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
-        <div className="max-w-md mx-auto min-h-full">
+        <div className="min-h-full">
            {view === 'dashboard' && renderDashboard()}
            {view === 'planner' && renderPlanner()}
            {view === 'generator' && renderGenerator()}
@@ -1053,47 +1073,48 @@ export default function App() {
         </div>
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="bg-white border-t border-slate-100 fixed bottom-0 w-full z-20 pb-safe">
-        <div className="max-w-md mx-auto flex justify-between items-center h-16 px-2">
+      {/* Floating Bottom Navigation */}
+      <nav className="fixed bottom-6 left-1/2 transform -translate-x-1/2 w-[90%] max-w-sm z-40">
+        <div className="bg-white/80 backdrop-blur-xl rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-white/50 flex justify-between items-center px-6 py-4 h-20">
           <button 
             onClick={() => setView('dashboard')}
-            className={`flex flex-col items-center justify-center w-[20%] h-full space-y-1 ${view === 'dashboard' ? 'text-emerald-600' : 'text-slate-400'}`}
+            className={`flex flex-col items-center justify-center space-y-1 transition-all duration-300 ${view === 'dashboard' ? 'text-emerald-600 -translate-y-1' : 'text-slate-400 hover:text-slate-600'}`}
           >
             <HomeIcon active={view === 'dashboard'} />
-            <span className="text-[9px] font-medium">Home</span>
+            <span className={`text-[10px] font-bold ${view === 'dashboard' ? 'opacity-100' : 'opacity-0 hidden'}`}>Home</span>
           </button>
           
           <button 
             onClick={() => setView('pantry')}
-            className={`flex flex-col items-center justify-center w-[20%] h-full space-y-1 ${view === 'pantry' ? 'text-emerald-600' : 'text-slate-400'}`}
+            className={`flex flex-col items-center justify-center space-y-1 transition-all duration-300 ${view === 'pantry' ? 'text-emerald-600 -translate-y-1' : 'text-slate-400 hover:text-slate-600'}`}
           >
             <PantryIcon active={view === 'pantry'} />
-             <span className="text-[9px] font-medium">Pantry</span>
+             <span className={`text-[10px] font-bold ${view === 'pantry' ? 'opacity-100' : 'opacity-0 hidden'}`}>Pantry</span>
           </button>
           
           <button 
             onClick={() => setView('generator')}
-            className={`flex flex-col items-center justify-center w-[20%] h-full space-y-1 ${view === 'generator' ? 'text-emerald-600' : 'text-slate-400'}`}
+            className={`relative -top-6 bg-slate-900 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-xl shadow-slate-400 transition-transform active:scale-95 border-4 border-[#f8fafc] ${view === 'generator' ? 'ring-2 ring-emerald-400' : ''}`}
           >
-            <ChefIcon active={view === 'generator'} />
-             <span className="text-[9px] font-medium">Chef</span>
+            <div className="w-6 h-6">
+                <ChefIcon active={true} />
+            </div>
           </button>
 
           <button 
             onClick={() => setView('planner')}
-            className={`flex flex-col items-center justify-center w-[20%] h-full space-y-1 ${view === 'planner' ? 'text-emerald-600' : 'text-slate-400'}`}
+            className={`flex flex-col items-center justify-center space-y-1 transition-all duration-300 ${view === 'planner' ? 'text-emerald-600 -translate-y-1' : 'text-slate-400 hover:text-slate-600'}`}
           >
             <CalendarIcon active={view === 'planner'} />
-             <span className="text-[9px] font-medium">Plan</span>
+             <span className={`text-[10px] font-bold ${view === 'planner' ? 'opacity-100' : 'opacity-0 hidden'}`}>Plan</span>
           </button>
 
           <button 
             onClick={() => setView('favorites')}
-            className={`flex flex-col items-center justify-center w-[20%] h-full space-y-1 ${view === 'favorites' ? 'text-emerald-600' : 'text-slate-400'}`}
+            className={`flex flex-col items-center justify-center space-y-1 transition-all duration-300 ${view === 'favorites' ? 'text-emerald-600 -translate-y-1' : 'text-slate-400 hover:text-slate-600'}`}
           >
             <HeartIcon active={view === 'favorites'} />
-             <span className="text-[9px] font-medium">Saved</span>
+             <span className={`text-[10px] font-bold ${view === 'favorites' ? 'opacity-100' : 'opacity-0 hidden'}`}>Saved</span>
           </button>
         </div>
       </nav>
