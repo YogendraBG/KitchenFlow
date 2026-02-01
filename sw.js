@@ -3,7 +3,6 @@ const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  'https://cdn.tailwindcss.com',
   'https://cdn-icons-png.flaticon.com/512/3565/3565418.png'
 ];
 
@@ -19,7 +18,7 @@ self.addEventListener('install', (event) => {
 // Fetch Event
 self.addEventListener('fetch', (event) => {
   // Skip cross-origin requests like Google API for now to avoid opaque response issues in basic SW
-  if (!event.request.url.startsWith(self.location.origin) && !event.request.url.includes('cdn.')) {
+  if (!event.request.url.startsWith(self.location.origin) && !event.request.url.includes('cdn-icons-png')) {
     return;
   }
 
